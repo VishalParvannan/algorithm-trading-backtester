@@ -1,0 +1,27 @@
+# Always-on, single-account service. Review Render charges before creating.
+services:
+  - type: web
+    name: backtest-lab
+    runtime: python
+    plan: starter
+    numInstances: 1
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m scripts.serve
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.14.3
+      - key: QUANTLAB_PUBLIC
+        value: "1"
+      - key: QUANTLAB_USERNAME
+        value: researcher
+      - key: QUANTLAB_PASSWORD
+        generateValue: true
+      - key: QUANTLAB_DB_PATH
+        value: /var/data/quantlab.sqlite
+      - key: MPLCONFIGDIR
+        value: /tmp/matplotlib
+    disk:
+      name: backtest-data
+      mountPath: /var/data
+      sizeGB: 1
