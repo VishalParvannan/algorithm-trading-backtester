@@ -1,11 +1,11 @@
 import json
 import pandas as pd
 import pytest
-from src.robustness import robustness
-from src.paper import PaperTrading
-from src.saved_comparison import compare_saved
-from app import run_backtest
-from src.storage import ExperimentStore
+from trading.robustness import robustness
+from trading.paper import PaperTrading
+from trading.saved_comparison import compare_saved
+from backend.backtest_service import run_backtest
+from trading.storage import ExperimentStore
 
 
 @pytest.fixture(autouse=True)

@@ -3,12 +3,12 @@ from concurrent.futures import CancelledError
 import pandas as pd
 import pytest
 
-from app import run_backtest
-from src.analysis import completed_trades
-from src.backtester import Backtester
-from src.portfolio import Portfolio
-from src.strategy import BuyAndHoldStrategy
-from src.storage import ExperimentStore
+from backend.backtest_service import run_backtest
+from trading.analysis import completed_trades
+from trading.backtester import Backtester
+from trading.portfolio import Portfolio
+from trading.strategy import BuyAndHoldStrategy
+from trading.storage import ExperimentStore
 
 
 def test_cash_covers_costs_and_hold_does_not_rebalance():

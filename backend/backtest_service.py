@@ -1,4 +1,4 @@
-"""Local dashboard for the existing backtesting engine. Run: python app.py."""
+"""Local dashboard for the existing backtesting engine. Run: python -m backend.backtest_service."""
 import json
 import math
 from datetime import date
@@ -7,16 +7,16 @@ from pathlib import Path
 from urllib.parse import urlparse
 import pandas as pd
 
-from src.backtester import Backtester
-from src.catalog import SOURCES, STRATEGIES, build_strategy, catalog
-from src.sources import load_source, normalize_daily
-from src.analysis import completed_trades
-from src.research import compare, holdout, engine
-from src.storage import ExperimentStore
-from src.data_quality import audit
-from src.robustness import robustness
+from trading.backtester import Backtester
+from trading.catalog import SOURCES, STRATEGIES, build_strategy, catalog
+from trading.sources import load_source, normalize_daily
+from trading.analysis import completed_trades
+from trading.research import compare, holdout, engine
+from trading.storage import ExperimentStore
+from trading.data_quality import audit
+from trading.robustness import robustness
 
-ROOT = Path(__file__).parent / "web"
+ROOT = Path(__file__).resolve().parents[1] / "web"
 
 
 def run_backtest(config, data=None, include_data=False, cancel_check=None):
@@ -168,4 +168,4 @@ class Handler(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     print("Backtest Lab is ready at http://localhost:8000 — Ctrl+C to stop.")
     import uvicorn
-    uvicorn.run("server:application", host="127.0.0.1", port=8000)
+    uvicorn.run("backend.server:application", host="127.0.0.1", port=8000)

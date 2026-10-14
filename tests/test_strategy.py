@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.strategy import (
+from trading.strategy import (
     MovingAverageStrategy,
     MomentumStrategy,
     RSIStrategy,

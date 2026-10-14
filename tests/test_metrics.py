@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from src.metrics import (
+from trading.metrics import (
     total_return,
     annualized_return,
     annualized_volatility,

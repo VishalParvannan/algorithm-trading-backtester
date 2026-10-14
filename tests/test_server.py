@@ -5,7 +5,7 @@ from concurrent.futures import CancelledError
 import pytest
 from fastapi.testclient import TestClient
 
-import server
+from backend import server
 
 
 @pytest.fixture

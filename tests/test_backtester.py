@@ -10,8 +10,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.backtester import Backtester, BacktestResult
-from src.strategy import (
+from trading.backtester import Backtester, BacktestResult
+from trading.strategy import (
     MovingAverageStrategy,
     MomentumStrategy,
     RSIStrategy,

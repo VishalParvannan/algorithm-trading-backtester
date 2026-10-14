@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from src.portfolio import Portfolio
+from trading.portfolio import Portfolio
 
 
 def test_initial_portfolio():

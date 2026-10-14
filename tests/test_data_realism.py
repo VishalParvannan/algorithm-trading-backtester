@@ -4,11 +4,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.data_quality import audit
-from src.sources import normalize_daily, load_source
-from src.data import download_data
-from src.metrics import annualized_return
-from app import run_backtest
+from trading.data_quality import audit
+from trading.sources import normalize_daily, load_source
+from trading.data import download_data
+from trading.metrics import annualized_return
+from backend.backtest_service import run_backtest
 
 
 def test_us_holidays_are_not_missing_bars():
@@ -41,7 +41,7 @@ def test_invalid_price_error_identifies_source_symbol_date_and_action():
 
 def test_yahoo_does_not_hide_incomplete_rows_and_preserves_actions():
     data=pd.DataFrame({'Open':[100,np.nan], 'High':[101,102], 'Low':[99,99], 'Close':[100,101], 'Volume':[10,10], 'Dividends':[1,0],'Stock Splits':[0,2]},index=pd.date_range('2025-01-02',periods=2))
-    with patch('src.data.yf.download',return_value=data) as download:
+    with patch('trading.data.yf.download',return_value=data) as download:
         result=download_data('AAPL','2025-01-01','2025-01-04')
     assert download.call_args.kwargs['auto_adjust'] is True
     assert len(result)==2

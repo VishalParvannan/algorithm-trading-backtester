@@ -10,14 +10,15 @@ This script demonstrates how to:
 
 import sys
 import os
+from pathlib import Path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from src.data import download_data
-from src.strategy import MovingAverageStrategy
-from src.backtester import Backtester
+from trading.data import download_data
+from trading.strategy import MovingAverageStrategy
+from trading.backtester import Backtester
 
 if __name__ == "__main__":
     # Configuration
@@ -62,11 +63,12 @@ if __name__ == "__main__":
     # Plot if requested
     if PLOT_RESULTS:
         print("\nGenerating plots...")
+        output_directory = Path(__file__).resolve().parents[1] / 'data' / 'plots'
+        output_directory.mkdir(parents=True, exist_ok=True)
         result.plot(
             title=f"{TICKER} {FAST_MA}/{SLOW_MA} MA Crossover Strategy",
-            save_path=f"examples/{TICKER}_ma_backtest.png"
+            save_path=str(output_directory / f"{TICKER}_ma_backtest.png")
         )
 
     # Optional: save results for further analysis
-    # result.equity_curve.to_csv(f"examples/{TICKER}_equity_curve.csv")
-    # result.trade_history.to_csv(f"examples/{TICKER}_trades.csv", index=False)
+    # Save optional CSV exports under data/ too, to keep outputs out of Git.

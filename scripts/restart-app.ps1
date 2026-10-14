@@ -18,7 +18,8 @@ $processes = @(Get-CimInstance Win32_Process)
 $servers = @($processes | Where-Object {
     $_.ExecutablePath -and
     [string]::Equals($_.ExecutablePath, $projectPython, [StringComparison]::OrdinalIgnoreCase) -and
-    ($_.CommandLine -match '(?i)\s-m\s+uvicorn\s+server:application(?:\s|$)' -or
+    ($_.CommandLine -match '(?i)\s-m\s+uvicorn\s+(?:backend\.)?server:application(?:\s|$)' -or
+     $_.CommandLine -match '(?i)\s-m\s+backend\.backtest_service(?:\s|$)' -or
      $_.CommandLine -match '(?i)\s(?:"[^"\r\n]*[\\/]app\.py"|"app\.py"|(?:[^\s"]*[\\/])?app\.py)(?:\s|$)')
 })
 
@@ -80,5 +81,5 @@ if ($OpenBrowser) {
     $browserHelper = Join-Path $PSScriptRoot 'open-browser.py'
     Start-Process -FilePath $projectPython -ArgumentList @(('"' + $browserHelper + '"'), '--port', $Port) -WindowStyle Hidden
 }
-& $projectPython -m uvicorn server:application --host 127.0.0.1 --port $Port --reload --app-dir $projectRoot --reload-dir $projectRoot
+& $projectPython -m uvicorn backend.server:application --host 127.0.0.1 --port $Port --reload --app-dir $projectRoot --reload-dir $projectRoot
 exit $LASTEXITCODE

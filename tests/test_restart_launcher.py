@@ -10,16 +10,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.mark.parametrize('conflict', [False, True])
-def test_restart_checks_process_ownership_without_stopping(tmp_path, conflict):
+@pytest.mark.parametrize('module', ['server:application','backend.server:application'])
+def test_restart_checks_process_ownership_without_stopping(tmp_path, conflict,module):
     script = tmp_path / 'check.ps1'
     root = str(ROOT).replace("'", "''")
     script.write_text(f"""
 $root = '{root}'
 function Get-CimInstance {{
     @(
-        [pscustomobject]@{{ProcessId=101;ParentProcessId=1;CreationDate=[datetime]'2025-01-01';ExecutablePath="$root\\.venv\\Scripts\\python.exe";CommandLine='python.exe -m uvicorn server:application --reload'}},
+        [pscustomobject]@{{ProcessId=101;ParentProcessId=1;CreationDate=[datetime]'2025-01-01';ExecutablePath="$root\\.venv\\Scripts\\python.exe";CommandLine='python.exe -m uvicorn {module} --reload'}},
         [pscustomobject]@{{ProcessId=102;ParentProcessId=101;CreationDate=[datetime]'2025-01-02';ExecutablePath='C:\\Python\\python.exe';CommandLine='reload worker'}},
-        [pscustomobject]@{{ProcessId=103;ParentProcessId=1;CreationDate=[datetime]'2025-01-01';ExecutablePath='C:\\Other\\python.exe';CommandLine='python.exe -m uvicorn server:application'}},
+        [pscustomobject]@{{ProcessId=103;ParentProcessId=1;CreationDate=[datetime]'2025-01-01';ExecutablePath='C:\\Other\\python.exe';CommandLine='python.exe -m uvicorn backend.server:application'}},
         [pscustomobject]@{{ProcessId=104;ParentProcessId=1;CreationDate=[datetime]'2025-01-01';ExecutablePath="$root\\.venv\\Scripts\\python.exe";CommandLine='python.exe examples/moving_average.py'}}
     )
 }}

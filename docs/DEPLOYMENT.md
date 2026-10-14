@@ -4,7 +4,7 @@
 
 ```powershell
 .venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe app.py
+.venv\Scripts\python.exe -m backend.backtest_service
 ```
 
 Open http://localhost:8000. The launcher now uses FastAPI/Uvicorn. Your

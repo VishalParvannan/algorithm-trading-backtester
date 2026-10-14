@@ -8,8 +8,8 @@ from urllib.request import Request, urlopen
 
 import pytest
 
-from app import Handler, run_backtest
-from src.catalog import catalog
+from backend.backtest_service import Handler, run_backtest
+from trading.catalog import catalog
 
 
 def test_all_options_remain_visible_without_catalog_endpoint():

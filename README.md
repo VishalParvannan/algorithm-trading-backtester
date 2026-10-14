@@ -1,5 +1,21 @@
 # Backtest Lab
 
+## Project folders
+
+- `backend/`: FastAPI endpoints and dashboard backtest orchestration.
+- `trading/`: strategies, simulation, data providers, analysis, research,
+  paper trading, and SQLite persistence.
+- `web/`: browser pages, navigation, styling, and interaction code.
+- `scripts/`: desktop startup, production startup, and maintenance utilities.
+- `tests/`: Python and browser regression checks.
+- `examples/`: runnable examples of the trading library.
+- `docs/`: deployment instructions.
+- `data/`: local databases and downloaded data; excluded from Git.
+
+The top level contains project configuration, this README, and the two
+double-click/terminal launchers. Start with **Backtest Lab.cmd** or
+`.\restart.cmd`; production uses `python -m scripts.serve`.
+
 A modular Python-based algorithmic trading backtesting engine built
 with pandas and NumPy.
 
@@ -143,7 +159,7 @@ to each execution. There is no liquidity, partial-fill, or explicit dividend
 payment ledger. CAGR uses elapsed calendar time; volatility and Sharpe still
 use the chosen annualization factor and can be distorted by missing bars.
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for private hosting, persistence,
+See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for private hosting, persistence,
 authentication, queue limits, and the distinction between monitoring and
 broker-connected paper trading.
 
@@ -221,7 +237,7 @@ quant-backtester/
 │
 ├── data/
 │
-├── src/
+├── trading/
 │   ├── data.py
 │   ├── strategy.py
 │   ├── portfolio.py

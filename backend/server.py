@@ -15,14 +15,14 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
-from app import ROOT, run_backtest
-from src.catalog import catalog
-from src.assets import search_assets
-from src.asset_directory import AssetDirectory
-from src.quotes import get_quote
-from src.saved_comparison import compare_saved
-from src.paper import PaperTrading
-from src.storage import ExperimentStore
+from backend.backtest_service import ROOT, run_backtest
+from trading.catalog import catalog
+from trading.assets import search_assets
+from trading.asset_directory import AssetDirectory
+from trading.quotes import get_quote
+from trading.saved_comparison import compare_saved
+from trading.paper import PaperTrading
+from trading.storage import ExperimentStore
 
 security = HTTPBasic(auto_error=False)
 pool = ThreadPoolExecutor(max_workers=2)

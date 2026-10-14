@@ -1,6 +1,6 @@
 import pytest
 
-from src.asset_directory import AssetDirectory, parse_equities
+from trading.asset_directory import AssetDirectory, parse_equities
 
 
 def test_refresh_persists_and_expires_daily(tmp_path):

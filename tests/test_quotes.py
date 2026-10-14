@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 import pandas as pd
 import pytest
-from src import quotes
+from trading import quotes
 
 
 def test_yahoo_quote_uses_bar_timestamp_and_currency(monkeypatch):

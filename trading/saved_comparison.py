@@ -21,7 +21,7 @@ def compare_saved(owner, identifiers, harmonize=False):
         if any(r['result']['ticker']!=first['result']['ticker'] for r in records):
             raise ValueError('A shared-snapshot comparison requires the same asset in every saved run.')
         data=pd.read_csv(StringIO(database.dataset(owner,identifiers[0])),index_col=0,parse_dates=True)
-        from app import run_backtest
+        from backend.backtest_service import run_backtest
         for key,record in zip(identifiers,records):
             config={**record['config'],**{k:first['config'].get(k,defaults.get(k)) for k in keys}}
             config.update(compare_strategies=[],holdout=False,robustness=False)

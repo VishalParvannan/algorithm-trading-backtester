@@ -1,7 +1,7 @@
 import pytest
 from scripts.serve import settings
 from fastapi.testclient import TestClient
-import server
+from backend import server
 
 
 def test_production_port_and_single_process(monkeypatch):
