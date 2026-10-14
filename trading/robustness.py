@@ -33,6 +33,7 @@ def robustness(config,data,cancel_check=None):
     if not 2<=count<=5 or len(data)//2<3 or len(data)-len(data)//2<count*3:
         raise ValueError('Walk-forward testing requires 2–5 folds and at least three bars per training/test period.')
     sensitivity=[]
+    # Full-sample sensitivity is exploratory; it never supplies the fold winner.
     for candidate in grid:
         run=engine(candidate,build_strategy(candidate),data.Close,cancel_check).run(data)
         sensitivity.append(dict(value=candidate.get(name) if name else None,metrics=run.metrics))
@@ -46,8 +47,10 @@ def robustness(config,data,cancel_check=None):
             fit=engine(candidate,build_strategy(candidate),train.Close,cancel_check).run(train)
             scores.append(fit.metrics['total_return'])
         chosen=grid[int(np.argmax(scores))]
+        # Only training scores select parameters; future test returns are excluded.
         underlying=build_strategy(chosen)
         history=data.iloc[:stop]
+        # Indicators can use prior history, but the account runs only on test dates.
         class WarmedStrategy:
             def generate_signals(self, portion):
                 return underlying.generate_signals(history).reindex(portion.index)

@@ -1,3 +1,4 @@
+"""Verify persistent asset directories, refresh timing, parsing, and failure recovery."""
 import pytest
 
 from trading.asset_directory import AssetDirectory, parse_equities

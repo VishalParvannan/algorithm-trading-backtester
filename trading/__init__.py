@@ -1,3 +1,4 @@
+"""Expose the public trading-library API for examples and external callers."""
 from .backtester import Backtester, BacktestResult
 from .data import download_data, load_csv, save_csv
 from .metrics import (

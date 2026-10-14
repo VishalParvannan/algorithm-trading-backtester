@@ -1,3 +1,4 @@
+# Run Python tests and browser regression checks on repository changes.
 name: Tests
 on: [push, pull_request]
 jobs:

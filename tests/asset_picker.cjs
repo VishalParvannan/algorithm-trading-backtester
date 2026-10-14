@@ -1,3 +1,4 @@
+// Verify searchable asset selection, keyboard controls, and source filtering.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');

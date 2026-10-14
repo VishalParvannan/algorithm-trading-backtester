@@ -1,3 +1,4 @@
+// Group dashboard panels into pages while preserving their state and event handlers.
 (() => {
   const byId=id=>document.getElementById(id);
   const pages={
@@ -19,6 +20,7 @@
       if(settings){
         settings.open=true;settings.classList.add('research-settings');
         settings.querySelector('summary').textContent='Research settings';
+        // Moved controls still belong to the original form for validation and FormData.
         for(const control of settings.querySelectorAll('input,select'))control.setAttribute('form','config');
         settings.addEventListener('input',()=>{if(typeof saveDraft==='function')saveDraft();});
         settings.addEventListener('change',()=>{if(typeof saveDraft==='function')saveDraft();});

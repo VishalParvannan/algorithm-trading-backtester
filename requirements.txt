@@ -1,3 +1,4 @@
+# Declare Python dependencies used by the app, examples, and tests.
 pandas>=2.2
 numpy>=2.0
 matplotlib>=3.9

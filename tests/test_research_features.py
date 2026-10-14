@@ -1,3 +1,4 @@
+"""Verify walk-forward selection, saved comparisons, and persistent paper accounts."""
 import json
 import pandas as pd
 import pytest

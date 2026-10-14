@@ -1,3 +1,4 @@
+// Verify quote polling, source changes, snapshots, and ignored late responses.
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const nodes=new Map(),timers=[];let resolveQuote,calls=0;
 function node(id){if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',innerHTML:'',replaceChildren(){this.innerHTML='';}});return nodes.get(id);}

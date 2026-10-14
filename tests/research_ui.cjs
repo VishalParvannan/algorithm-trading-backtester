@@ -1,3 +1,4 @@
+// Verify research controls, sensitivity displays, comparisons, and paper-session actions.
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const nodes=new Map(),calls=[];let sessions=[],researchRuns=0;
 function element(){return {value:'',textContent:'',hidden:false,disabled:false,checked:false,style:{},children:[],replaceChildren(...children){this.children=children;this.value=children[0]?.value||'';},append(...children){this.children.push(...children);},get selectedOptions(){return this.children.filter(o=>o.selected);}};}

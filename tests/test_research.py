@@ -1,3 +1,4 @@
+"""Verify same-snapshot strategy comparisons and chronological holdout tests."""
 from concurrent.futures import CancelledError
 
 import pandas as pd

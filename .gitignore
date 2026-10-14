@@ -1,3 +1,4 @@
+# Keep local environments, secrets, databases, and generated files out of Git.
 # Python
 __pycache__/
 *.py[cod]

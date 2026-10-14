@@ -1,3 +1,4 @@
+"""Verify quote adapters, currency labels, and historical versus simulated data."""
 from unittest.mock import Mock
 import pandas as pd
 import pytest
@@ -14,6 +15,7 @@ def test_yahoo_quote_uses_bar_timestamp_and_currency(monkeypatch):
     assert result['currency']=='CAD'
     assert result['timestamp'].startswith('2025-01-02')
     assert result['interval']==60
+    assert ticker.history.call_args.kwargs['auto_adjust'] is False
     assert 'delayed' in result['mode']
 
 

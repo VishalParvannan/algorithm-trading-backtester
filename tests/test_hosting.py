@@ -1,3 +1,4 @@
+"""Verify production port settings, private authentication, and persistent-storage requirements."""
 import pytest
 from scripts.serve import settings
 from fastapi.testclient import TestClient

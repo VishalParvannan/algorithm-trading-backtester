@@ -1,3 +1,4 @@
+"""Download, load, and export historical market-price tables."""
 from pathlib import Path
 
 import pandas as pd

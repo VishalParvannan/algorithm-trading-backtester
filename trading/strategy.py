@@ -1,3 +1,4 @@
+"""Define the strategy interface and supported long-only trading signals."""
 from abc import ABC, abstractmethod
 
 import numpy as np

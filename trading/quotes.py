@@ -23,7 +23,8 @@ def get_quote(config):
         result.update(price=float(quote['price']),timestamp=quote['time'],mode='Coinbase · polled quote',interval=10)
     elif source == 'market':
         ticker = yf.Ticker(symbol)
-        bars = ticker.history(period='5d', interval='1m', auto_adjust=True, timeout=15)
+        # Paper accounts apply corporate actions explicitly, so quotes must stay raw.
+        bars = ticker.history(period='5d', interval='1m', auto_adjust=False, timeout=15)
         bars = bars.dropna(subset=['Close']) if 'Close' in bars else bars.iloc[0:0]
         if bars.empty:
             raise ValueError('Yahoo returned no recent prices for this symbol.')

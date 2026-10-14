@@ -1,3 +1,4 @@
+# Exclude local development files and private data from container builds.
 .venv
 .git
 __pycache__

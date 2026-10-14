@@ -1,3 +1,4 @@
+// Verify page grouping, browser navigation, form ownership, and chart redraws.
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const nodes=new Map(),events={},storage=new Map();let redraws=0;
 function element(){return {id:'',hidden:false,textContent:'',dataset:{},children:[],attributes:{},classList:{toggle(name,value){this[name]=value;}},append(child){if(child.parent)child.parent.children=child.parent.children.filter(c=>c!==child);this.children.push(child);child.parent=this;},setAttribute(name,value){this.attributes[name]=value;},removeAttribute(name){delete this.attributes[name];}};}

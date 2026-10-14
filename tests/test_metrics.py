@@ -1,3 +1,4 @@
+"""Verify the numerical behavior of portfolio performance metrics."""
 import pandas as pd
 import pytest
 

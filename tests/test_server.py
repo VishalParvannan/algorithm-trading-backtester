@@ -1,3 +1,4 @@
+"""Verify protected API routes, saved results, research jobs, and cancellation."""
 import time
 from threading import Event
 from concurrent.futures import CancelledError

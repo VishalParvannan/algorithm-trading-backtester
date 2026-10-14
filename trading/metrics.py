@@ -1,3 +1,4 @@
+"""Calculate return, annual growth, volatility, Sharpe ratio, and drawdown."""
 import numpy as np
 import pandas as pd
 

@@ -1,3 +1,4 @@
+// Display research results, compare saved experiments, and manage paper sessions.
 (() => {
   const node=id=>document.getElementById(id);
   const percent=value=>value==null?'—':`${(value*100).toFixed(2)}%`;
@@ -82,6 +83,7 @@
       node('paper-note').textContent=`${session.method} Sampling approximately every ${session.sample_interval||60} seconds. ${session.observations.length} observations collected; warm-up needs approximately ${session.warmup_observations||1}. ${session.error||''}`;
       node('paper-value').textContent=`Equity ${number(session.equity)} · Cash ${number(session.cash)} · Shares ${number(session.shares)} · ${session.currency||'Quote currency'} · ${session.active?'Running while server is open':'Stopped'}`;
       table('paper-trades',session.trades.slice(-50).reverse().map(t=>[t.timestamp,t.quantity>0?'Buy':'Sell',number(Math.abs(t.quantity)),number(t.price),number(t.commission)]));
+      table('paper-actions-body',(session.corporate_actions||[]).slice(-50).reverse().map(event=>[event.effective,event.kind,number(event.value),number(event.shares_before),number(event.shares_after),number(event.cash_credit),event.model]));
     }catch(error){node('paper-note').textContent=error.message;}finally{polling=false;}
   }
   node('paper-start').onclick=async()=>{

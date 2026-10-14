@@ -1,3 +1,4 @@
+"""Verify asset search, provider filters, ranking, and offline fallback."""
 from unittest.mock import patch
 import pytest
 

@@ -12,9 +12,11 @@ def completed_trades(history):
         remaining = -quantity
         exit_fee = float(trade.commission) / remaining
         while remaining > 1e-9 and lots:
+            # Match the oldest purchase first; partial exits keep the unclosed lot.
             lot = lots[0]
             matched = min(remaining, lot["quantity"])
             entry_cost = (lot["price"] + lot["fee_per_share"]) * matched
+            # Fill prices already include slippage; only commissions are added here.
             proceeds = (float(trade.price) - exit_fee) * matched
             closed.append(dict(entry_date=str(lot["date"].date()), exit_date=str(trade.timestamp.date()), quantity=matched, entry_price=lot["price"], exit_price=float(trade.price), net_pnl=proceeds - entry_cost, return_pct=(proceeds / entry_cost - 1) * 100, holding_days=(trade.timestamp - lot["date"]).days, commission=(lot["fee_per_share"] + exit_fee) * matched))
             remaining -= matched

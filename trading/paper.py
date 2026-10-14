@@ -10,6 +10,7 @@ from .portfolio import Portfolio
 from .catalog import build_strategy
 from .quotes import get_quote
 from .assets import valid_symbol
+from .corporate_actions import fetch_actions, apply_actions, ActionReviewRequired
 
 
 class PaperTrading:
@@ -36,7 +37,7 @@ class PaperTrading:
                 raise ValueError('Stop an active session before starting another (maximum three).')
             identifier=uuid.uuid4().hex
             payload=dict(id=identifier,config=config,active=True,created=datetime.now(timezone.utc).isoformat(),cash=capital,shares=0,last_target=0,pending_target=0,observations=[],trades=[],equity=capital,next_poll=0,error=None,currency=None,
-                         method='Simulated orders on the next fresh sampled quote after a signal. Indicators use collected quote observations, not historical daily candles. Warm-up starts empty. No real orders, liquidity model, or corporate-action ledger; stop/reset around splits. Prices may be delayed.')
+                         method='Simulated orders on the next fresh sampled quote after a signal. Indicators use collected quote observations, not historical daily candles. Yahoo splits adjust shares and indicator history; dividends credit cash on the ex-date, not broker payment dates. Warm-up starts empty. No real orders or liquidity model. Prices may be delayed.',corporate_actions=[])
             payload['warmup_observations']=max((getattr(strategy,name,0) for name in ('fast','slow','lookback','period','entry_period')),default=0)+getattr(strategy,'signal_period',0)+1
             payload['sample_interval']={'market':60,'coinbase':10,'demo':5}[config['source']]
             db.execute('INSERT INTO paper_sessions VALUES (?,?,?)',(identifier,owner,json.dumps(payload)))
@@ -55,7 +56,7 @@ class PaperTrading:
             db.execute('UPDATE paper_sessions SET payload=? WHERE id=?',(json.dumps(state),identifier))
         return state
 
-    def tick(self,identifier,loader=None):
+    def tick(self,identifier,loader=None,action_loader=None):
         # Keep a per-session atomic transition even when polling and stop overlap.
         # Claim before network access so multiple server processes do not poll twice.
         now=time.time()
@@ -73,21 +74,27 @@ class PaperTrading:
             if timestamp.tzinfo is None:timestamp=timestamp.tz_localize('UTC')
             else:timestamp=timestamp.tz_convert('UTC')
             if not math.isfinite(price) or price<=0:raise ValueError('Invalid paper quote.')
+            events=(action_loader or fetch_actions)(state['config'],state['created']) if state['config']['source']=='market' else []
             with self.store.connect() as db:
                 db.execute('BEGIN IMMEDIATE')
                 latest=json.loads(db.execute('SELECT payload FROM paper_sessions WHERE id=?',(identifier,)).fetchone()[0])
                 if not latest['active']:return
                 state=latest;state['next_poll']=time.time()+max(5,int(quote.get('interval') or 60))
+                # Existing saved sessions also adopt the current action-policy label.
+                state['method']='Simulated next-fresh-quote fills. Yahoo splits adjust shares and indicator history; dividends use ex-date cash credits, not broker payment dates. Quote observations define indicator periods. No real orders or liquidity model.'
                 if state['currency'] and quote.get('currency')!=state['currency']:
                     raise ValueError('Quote currency changed; stop this session and create a new account.')
                 state['currency']=quote.get('currency')
                 if state['observations'] and timestamp<=pd.Timestamp(state['observations'][-1]['timestamp']):
                     state['error']='Waiting for a fresh quote; duplicate timestamps do not generate orders.'
                 else:
+                    # Apply events before any new order; ledger and fill commit together.
+                    apply_actions(state,events,timestamp)
                     config=state['config']
                     portfolio=Portfolio(float(config.get('capital',10000)),float(config.get('commission',.1))/100,float(config.get('slippage',.05))/100,config.get('share_mode','fractional')=='fractional')
                     portfolio.cash=state['cash'];portfolio.shares=state['shares'];portfolio.last_target=state['last_target']
                     portfolio.execute_target_position(state['pending_target'],price,timestamp.isoformat())
+                    # Execute the prior observation's signal before calculating a new one.
                     state['trades'].extend(portfolio.trades)
                     state.update(cash=portfolio.cash,shares=portfolio.shares,last_target=portfolio.last_target,equity=portfolio.value(price),error=None)
                     state['observations'].append(dict(timestamp=timestamp.isoformat(),price=price))
@@ -100,6 +107,7 @@ class PaperTrading:
             with self.store.connect() as db:
                 row=db.execute('SELECT payload FROM paper_sessions WHERE id=?',(identifier,)).fetchone()
                 current=json.loads(row[0]);current['error']=str(exc) if isinstance(exc,ValueError) else 'Quote polling failed. Check the feed and connection; retrying in one minute.'
+                if isinstance(exc,ActionReviewRequired):current['active']=False
                 db.execute('UPDATE paper_sessions SET payload=? WHERE id=?',(json.dumps(current),identifier))
 
     def tick_due(self):

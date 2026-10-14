@@ -1,3 +1,4 @@
+# Restart only verified project servers and optionally open the dashboard.
 [CmdletBinding()]
 param(
     [ValidateRange(1024, 65535)][int]$Port = 8000,

@@ -1,3 +1,4 @@
+"""Track simulated cash, holdings, and executions for long-only target positions."""
 from dataclasses import dataclass
 import math
 

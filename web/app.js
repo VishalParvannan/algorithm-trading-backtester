@@ -1,3 +1,4 @@
+// Manage backtest configuration, saved drafts, research jobs, and result charts.
 const $ = selector => document.querySelector(selector);
 let result = null, view = 'equity', page = 0, definitions = JSON.parse($('#dashboard-catalog').textContent), csvText = '', csvGeneration = 0;
 const storageKey = 'quantlab.workspace.v1';

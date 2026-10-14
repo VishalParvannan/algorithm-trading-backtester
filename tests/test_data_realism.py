@@ -1,3 +1,4 @@
+"""Verify session dates, price validation, costs, adjustments, and timing assumptions."""
 from datetime import date
 from unittest.mock import patch
 import numpy as np

@@ -1,3 +1,4 @@
+"""Apply per-trade commissions and adverse price slippage to simulated fills."""
 from dataclasses import dataclass
 import math
 

@@ -1,265 +1,252 @@
 # Backtest Lab
 
-## Project folders
+A Python web app for testing trading strategies, comparing historical results,
+and running simulated paper portfolios. Built with FastAPI, pandas, NumPy,
+SQLite, and a browser interface.
 
-- `backend/`: FastAPI endpoints and dashboard backtest orchestration.
-- `trading/`: strategies, simulation, data providers, analysis, research,
-  paper trading, and SQLite persistence.
-- `web/`: browser pages, navigation, styling, and interaction code.
-- `scripts/`: desktop startup, production startup, and maintenance utilities.
-- `tests/`: Python and browser regression checks.
-- `examples/`: runnable examples of the trading library.
-- `docs/`: deployment instructions.
-- `data/`: local databases and downloaded data; excluded from Git.
+## Setup and launch
 
-The top level contains project configuration, this README, and the two
-double-click/terminal launchers. Start with **Backtest Lab.cmd** or
-`.\restart.cmd`; production uses `python -m scripts.serve`.
+Install Python 3.12 or later. From the project folder in a Windows terminal:
 
-A modular Python-based algorithmic trading backtesting engine built
-with pandas and NumPy.
+```powershell
+py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
 
-The project simulates systematic trading strategies using historical
-market data while accounting for transaction costs, slippage, and
-look-ahead bias.
+Skip creating `.venv` if it already exists. No frontend build is required.
+Node.js is optional and used for browser regression checks.
 
-## Dashboard
+Open the project folder in **Windows File Explorer** and double-click
+**Backtest Lab.cmd**. It restarts verified servers belonging to this project,
+waits for startup, and opens http://127.0.0.1:8000 in your default browser.
+Leave its window running; you can minimize it. Press **Ctrl+C** there to stop.
+Saving code automatically reloads the local server.
 
-On Windows, open the project folder in File Explorer and double-click
-**Backtest Lab.cmd**. It restarts this project's server, waits until it is
-ready, and opens the dashboard in your default browser. Leave its window
-running (you can minimize it); press Ctrl+C there to stop. Startup errors
-remain visible. To put it on your desktop, right-click the file and choose
-**Show more options → Send to → Desktop (create shortcut)**. Keep the actual
-launcher in the project folder so it can find the environment and scripts.
+For a desktop shortcut, right-click the launcher and choose **Show more
+options > Send to > Desktop (create shortcut)**. Keep the actual file inside
+the project folder.
 
-Launch the local Backtest Lab workspace from the project directory:
+Alternatively, use VS Code's terminal:
 
 ```powershell
 .\restart.cmd
 ```
 
-On Windows, this command stops verified servers belonging to this project's
-`.venv` (including reload workers and older instances on other ports), then
-starts one server on port 8000 with automatic reload. Leave its terminal open;
-press Ctrl+C there to shut down. Unrelated or unverified processes are never
-stopped. If another app occupies port 8000, the command stops without making
-changes; use `.\restart.cmd -Port 8002` to choose another port.
-Run `.\restart.cmd -CheckOnly` to inspect what would be stopped without
-changing anything. The launcher applies PowerShell's execution-policy setting
-only to its own invocation; it does not change your system policy.
+If another app occupies port 8000, use `.\restart.cmd -Port 8002` and open
+http://127.0.0.1:8002. Unrelated processes are never stopped. Run
+`.\restart.cmd -CheckOnly` to inspect process checks without changing anything.
 
-Open http://localhost:8000 in your browser. The dashboard includes strategy
-configuration, performance metrics, interactive equity and drawdown charts,
-trade filtering, pagination, and CSV export. It starts with empty results and
-trade history until you run a backtest. Select **Yahoo Finance** to run against
-historical prices (requires internet access). Synthetic data remains available
-for testing charts, but sample executions never populate trade history.
-All backtests use the existing
-Python engine and delay signals by one bar.
+On other platforms, create a virtual environment, install the requirements,
+and run `python -m backend.backtest_service` from the project root.
 
-The sidebar opens separate Backtest, Research, Saved runs, Trade history,
-Market monitor, and Paper trading views. Mobile screens use a horizontal
-navigation bar. Switching views preserves inputs, results, and running feeds;
-the app remembers the last view and supports browser Back/Forward navigation.
-Opening a saved experiment returns to Backtest to show its results.
+## Workspace pages
 
-No additional dashboard dependencies are needed. On a fresh setup, install
-the existing dependencies with `python -m pip install -r requirements.txt`.
+| Page | Purpose |
+| --- | --- |
+| Backtest | Configure sources, assets, strategies, dates, capital, and execution; view metrics and portfolio performance |
+| Research | Compare strategies and run sensitivity, holdout, and walk-forward tests |
+| Saved runs | Open, replay, and compare saved experiments |
+| Trade history | Review historical executions and completed trades |
+| Market monitor | Watch streaming, polled, historical, or simulated prices |
+| Paper trading | Manage separate simulated portfolios using incoming quotes |
 
-Your configuration, parameters for each strategy, and uploaded CSV contents
-are saved automatically in browser local storage as you edit. They are
-restored after closing the browser or restarting the server, provided you
-use the same browser and address (for example, `http://localhost:8000`).
-Clearing site data or using a private browsing session can remove that state.
-API keys are not saved. Re-enter your key or use the
-server environment variable when needed. Results remain empty on reopen
-until you run again or open a saved experiment. A notice appears if browser storage is unavailable.
+Navigation preserves inputs, results, and running feeds. Mobile screens use
+horizontal navigation. The app remembers the last page and supports browser
+Back/Forward navigation.
 
-### Research workspace
+### Your first backtest
 
-- Cash-aware position sizing reserves commission and slippage costs; an
-  unchanged signal holds the position without daily rebalancing trades.
-- Choose whole or fractional shares, allocation percentage, and next-bar
-  Open or Close fills. Open fills require an Open column.
-- Completed-trade analysis matches executions FIFO, includes commissions,
-  and counts slippage once through the execution price. Win rate excludes
-  positions that remain open. Profit factor is unavailable with no closed
-  trades; a run with wins and no losses is labeled accordingly.
-- Compare all strategies on one dataset snapshot. The selected strategy
-  uses your parameters; the others use their documented defaults.
-- Chronological holdout divides the range into independent training and
-  test runs with fixed parameters. There is no automated fitting or
-  parameter search, and indicators warm up independently in each period.
-- Market-data runs are saved in SQLite with input settings, results, engine
-  version, and a SHA-256 fingerprint of the exact prices. Open or replay
-  them from Saved experiments. Synthetic runs are not saved.
-- Drafts also sync to SQLite, allowing a fresh browser to restore inputs.
-  API keys are excluded; more recently edited drafts take precedence.
-- Research jobs run in a bounded background queue and can be cancelled.
-- The optional market monitor supports every source with streaming, polling,
-  historical snapshot, or simulated labels and is separate from strategy execution.
+1. Open **Backtest**, select a data source, and search by asset name or symbol.
+2. Select a strategy and dates long enough for its indicators to warm up.
+3. Set capital, allocation, costs, and whole or fractional shares.
+4. Choose next-bar Close or Open fills. Open fills need an `Open` column.
+5. Click **Run backtest**, then inspect the chart and data-quality notes.
+6. Open **Trade history** to review executions and completed trades.
 
-### Walk-forward testing, comparisons, and paper trading
+Results start empty. Synthetic backtests do not populate historical trade
+history or saved experiments.
 
-- In Strategy setup, enable **Sensitivity + walk-forward**, choose the parameter
-  to vary, and choose two to five folds. The sensitivity chart varies that
-  parameter around your current setting with the other parameters held fixed.
-  Walk-forward folds expand the training history and select the parameter using
-  training net return only, then evaluate it on later dates. Each fold starts
-  with independent cash; indicators use prior history, and delayed fills leave
-  the first test bar in cash. Full-period sensitivity is exploratory and must
-  not be mistaken for unseen test performance.
-- **Compare saved runs** accepts two to five experiments and highlights differing
-  data and assumptions. Enable the shared-snapshot checkbox to rerun the saved
-  strategies on the first selected run's exact prices, dates, capital, costs,
-  allocation, calendar, and fill model. This requires the same asset and does
-  not overwrite the original saved results.
-- **Paper trading** starts an independent simulated account from Strategy setup.
-  Yahoo polls minute quotes; Coinbase polls public trade snapshots; demo uses
-  simulated quotes. Indicators count collected quote observations, not daily
-  backtest bars, and warm-up begins empty. A signal fills on the next fresh
-  quote, including commission, slippage, allocation, and share rounding.
-  Duplicate quote timestamps cannot generate orders. Sessions, observations,
-  positions, and trades persist in SQLite; active sessions resume polling when
-  the server restarts and continue when the browser closes. No data is collected
-  while the server is closed. Stop preserves the portfolio and open positions
-  without submitting a liquidation order. API keys are never stored.
+## Data and strategies
 
-Paper sessions support Yahoo, Coinbase, and demo. Alpha Vantage's default
-daily quote and CSV files are snapshots, not incoming feeds. Paper trading has
-no brokerage integration, liquidity/partial-fill model, or corporate-action
-ledger; reset sessions around stock splits. The dashboard explains the quote
-sampling interval and warm-up behavior. Maximum three active sessions per user.
-
-### Data checks and simulation assumptions
-
-Data errors identify the provider, symbol, requested range, offending session,
-and corrective action. Invalid bars remain visible to validation instead of
-being silently dropped; tiny numerical discrepancies are tolerated without
-changing prices. Daily dates retain the exchange's local session date.
-
-Market sessions can be automatic, US equities (NYSE holidays), 24/7, or
-weekdays with an unverified holiday calendar. Automatic mode recognizes US
-directory assets and USD crypto pairs; choose a calendar explicitly for CSV
-or unsupported exchanges. Missing sessions are listed and never filled with
-invented prices. A signal fills on the next available bar, which may be later
-than the next scheduled session when data is incomplete.
-
-Yahoo adjusts all OHLC columns for splits and dividends consistently. Reported
-corporate-action event counts are retained, but dividend cash is not added a
-second time. Adjusted-price fills and whole-share quantities are research
-approximations, not a reconstruction of raw historical broker executions.
-Alpha Vantage's daily data remains raw; CSV adjustments are supplied by the
-user. Unusually large moves in either source prompt a split/data check.
-
-Signals use completed bars, execute at the next available Open or Close as
-selected, and mark portfolio value at Close. Commission and slippage apply
-to each execution. There is no liquidity, partial-fill, or explicit dividend
-payment ledger. CAGR uses elapsed calendar time; volatility and Sharpe still
-use the chosen annualization factor and can be distorted by missing bars.
-
-See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for private hosting, persistence,
-authentication, queue limits, and the distinction between monitoring and
-broker-connected paper trading.
-
-### Data sources
-
-| Source | Symbol example | Setup |
+| Source | Examples | Requirements |
 | --- | --- | --- |
-| Synthetic sample | Any display symbol | Reproducible generated prices; no network needed |
-| Yahoo Finance | SPY, AAPL, BTC-USD | Adjusted daily prices; internet required |
-| Coinbase | BTC-USD, ETH-USD | Daily USD crypto candles; no API key required |
-| Alpha Vantage | IBM, MSFT | Enter an API key or set `ALPHA_VANTAGE_API_KEY` on the server |
-| CSV upload | CUSTOM or your asset symbol | Upload a CSV with `Date,Close`; optional `Open,High,Low,Volume` |
+| Yahoo Finance | `AAPL`, `SPY`, `BTC-USD` | Internet; adjusted daily OHLCV |
+| Coinbase | `BTC-USD`, `ETH-USD` | Internet; daily USD crypto candles |
+| Alpha Vantage | `IBM`, `MSFT` | API key; raw daily OHLCV |
+| CSV upload | Your asset symbol | Up to 2 MB; daily `Date,Close` columns |
+| Sample data | Any display symbol | Synthetic prices; no network |
 
-All selected date ranges include the end date. CSV data must have one row per
-day, valid dates, and positive finite prices. Files are limited to 2 MB and
-are processed in memory without being saved to the project. Use USD prices
-to match the dashboard's currency display. The CSV example download shows
-the accepted format; choose short strategy windows when trying its few rows.
+CSV can also contain `Open,High,Low,Volume`. Use one row per day and positive,
+finite prices. Historical backtests format monetary values as USD. Uploaded
+CSV contents may be saved in drafts and experiment snapshots.
 
-[Alpha Vantage daily data](https://www.alphavantage.co/documentation/#daily)
-uses raw prices, so splits and dividends are not adjusted. Compact history
-includes the latest 100 bars; full history requires a premium API key.
-The dashboard suggests recent dates for compact history and reports the
-actual available range. Keys are not stored by the app or returned in results.
+Alpha Vantage compact history contains its latest 100 bars; full access
+depends on the provider's plan. Enter a key in the app or set
+`ALPHA_VANTAGE_API_KEY`. Keys are not saved with drafts or results. Backtest
+date ranges include the end date.
 
-[Coinbase candles](https://docs.cdp.coinbase.com/api-reference/exchange-api/rest-api/products/get-product-candles)
-are downloaded in date batches and can have missing days without trades.
-The dashboard uses 365 bars per year for Coinbase. Choose the same calendar
-for daily crypto CSVs or Yahoo crypto data; choose 252 for weekday equities.
-These annualization assumptions affect CAGR, volatility, and Sharpe ratio.
+Available strategies: moving average crossover, EMA crossover, momentum,
+RSI mean reversion, MACD, Bollinger Bands, Donchian breakout, and buy & hold.
+All are long-only. Historical windows count available daily bars. Donchian
+uses closing-price channels, allowing Close-only CSVs.
 
-### Strategies
+### Asset directory
 
-All strategies are long-only and use signals from the preceding bar.
-Windows are measured in available daily bars.
+Search uses US securities from Nasdaq Trader and active USD pairs from
+Coinbase, stored in SQLite. Built-in names remain available, and unmatched
+Yahoo searches can return additional assets. Suggestions adapt to the source.
 
-| Strategy | Entry / holding rule | Exit rule |
-| --- | --- | --- |
-| Simple moving average crossover | Fast average exceeds slow average | Fast average falls below or equals slow |
-| EMA crossover | Fast exponential average exceeds slow | Fast average falls below or equals slow |
-| Momentum | Lookback return is positive | Lookback return is zero or negative |
-| RSI mean reversion | RSI falls below oversold | RSI rises above overbought |
-| MACD | MACD exceeds its signal line | MACD falls below or equals its signal line |
-| Bollinger Bands | Close falls below lower band | Close recovers to the middle band |
-| Donchian breakout | Close exceeds the prior closing-price channel high | Close falls below the shorter closing-price channel low |
-| Buy & hold | Invest on the first executable bar | Remain invested |
+The server checks at startup and hourly. Successful directories refresh after
+24 hours; failed downloads preserve the last successful copy and retry after
+an hour. `/api/assets/status` reports counts and refresh status. The directory
+does not cover every worldwide or historically delisted asset.
 
-The Donchian variant uses closing prices rather than intraday highs and lows,
-so it works with Close-only CSV files. Strategies remain in cash during
-indicator warm-up. Increase your date range or shorten windows if the
-dashboard reports insufficient warm-up data.
+## Research
 
-## Engine features
+Configure the asset, dates, strategy, and costs on **Backtest**. Open **Research**,
+choose analyses, and click **Run selected analyses**.
 
-- Historical OHLCV data
-- Modular trading strategy architecture
-- Moving average crossover strategy
-- Momentum strategy
-- RSI strategy
-- Portfolio simulation
-- Transaction costs
-- Slippage modeling
-- Benchmark comparison
-- Sharpe ratio
-- CAGR
-- Annualized volatility
-- Maximum drawdown
-- Trade history
-- Unit tests
+- **Strategy comparison:** same prices and costs; your strategy uses your
+  parameters, and other strategies use their defaults.
+- **Parameter sensitivity:** varies one chosen setting around its current
+  value, holding other settings fixed. Strategies without adjustable settings
+  show that explicitly. Full-period sensitivity is exploratory, not unseen performance.
+- **Chronological holdout:** fixed parameters, independent training/test
+  accounts, and independent indicator warm-up.
+- **Walk-forward:** two to five expanding training windows. A candidate is
+  chosen by training net return and evaluated on later dates. Each test fold
+  starts with independent cash and indicators warmed by prior history; its
+  first bar remains cash before delayed fills.
 
-## Project Structure
+### Saved experiments
+
+Non-synthetic runs save their settings, results, engine version, and exact
+price snapshots with fingerprints. Replay uses stored prices with the current
+engine rather than downloading again. Opening a saved run returns to Backtest.
+
+Select two to five saved runs to compare them. Differences in data and
+assumptions are highlighted. The shared-snapshot option reruns strategies
+using the first selected run's prices, dates, capital, costs, allocation,
+calendar, and fill model. It requires the same asset and preserves originals.
+
+## Market monitor and paper trading
+
+| Source | Market monitor |
+| --- | --- |
+| Coinbase | Browser WebSocket stream for USD crypto |
+| Yahoo | Recent quotes polled every minute; may be delayed |
+| Alpha Vantage | Default daily quotes checked hourly; key required |
+| CSV | Latest chronological uploaded price |
+| Sample data | Simulated quotes every five seconds |
+
+Connections start on request. Monitoring does not execute orders or alter
+historical backtest results.
+
+**Paper trading** starts a separate simulated account using the Backtest
+asset, strategy, capital, allocation, costs, and share sizing. Yahoo, Coinbase,
+and demo are supported; Alpha Vantage daily quotes and CSVs are snapshots.
+
+Indicators count collected quote observations, not daily backtest candles.
+Warm-up begins empty, and the page shows the observation count and sampling
+interval. A signal fills on the next fresh quote, with fees and slippage.
+Duplicate timestamps do not generate orders.
+
+Sessions, positions, observations, and trades persist in SQLite. Active
+sessions continue when the browser closes and resume after server restart.
+No quotes are collected during downtime. Stop freezes the account without
+liquidating positions. Maximum three active sessions per user.
+
+Yahoo paper accounts apply splits to holdings and stored indicator prices, and
+credit dividends to eligible holdings using an ex-date cash model. A persistent
+action ledger prevents duplicate adjustments after restarts. Newly bought shares
+on the ex-date do not receive that dividend. Action-feed failures hold new
+orders; late or revised events that would affect previous trades pause the
+session for review. Reverse splits retain fractional entitlements; broker
+cash-in-lieu, payment dates, taxes, and special distributions are not modeled.
+Paper trading has no brokerage integration or liquidity/partial-fill model.
+No real orders are submitted.
+
+## Storage and simulation assumptions
+
+The default database is `data/quantlab.sqlite`; override with
+`QUANTLAB_DB_PATH`. Drafts also save in browser local storage and sync to
+SQLite. Use a consistent browser address: `localhost` and `127.0.0.1` have
+separate browser storage. API keys are excluded. `.env` files are not loaded
+automatically.
+
+- Data errors identify the provider, asset, requested range, offending date,
+  and corrective action. Incomplete rows are not silently dropped.
+- Daily dates preserve the exchange's local session date. Choose automatic,
+  US equity sessions, 24/7, or weekdays with an unverified holiday calendar.
+  US holidays are distinguished from missing bars. Missing prices are never invented.
+- Yahoo adjusts all OHLC prices for splits and dividends. Dividend cash is
+  not added twice. Adjusted-price fills and whole-share quantities are research
+  approximations, not raw historical broker executions.
+- Alpha Vantage remains raw; CSV adjustments are user supplied. Large price
+  moves prompt a split/data check.
+- Completed-bar signals fill at the next available Open or Close with costs.
+  Portfolios are valued at Close; unchanged targets hold without daily rebalancing.
+- Completed trades use FIFO matching and both commissions. Slippage is
+  counted once through execution prices. Open positions are excluded from win rate.
+- CAGR uses elapsed calendar time. Volatility and Sharpe use the selected
+  annualization factor and can be distorted by missing observations.
+
+## Project structure
 
 ```text
-quant-backtester/
-│
-├── data/
-│
-├── trading/
-│   ├── data.py
-│   ├── strategy.py
-│   ├── portfolio.py
-│   ├── execution.py
-│   ├── metrics.py
-│   └── backtester.py
-│
-├── tests/
-│   ├── test_strategy.py
-│   ├── test_portfolio.py
-│   └── test_metrics.py
-│
-├── examples/
-│   └── moving_average.py
-│
-├── notebooks/
-│
-├── README.md
-├── requirements.txt
-└── .gitignore
+algorithm-trading-backtester/
+  backend/             Web API and backtest orchestration
+  trading/             Strategies, simulation, data, research, and storage
+  web/                 HTML, CSS, and browser JavaScript
+  scripts/             Startup and maintenance utilities
+  tests/               Python and browser regression checks
+  examples/            Runnable trading-library examples
+  docs/                Deployment instructions
+  data/                Databases and generated outputs (ignored by Git)
+  Backtest Lab.cmd     Double-click launcher
+  restart.cmd          Terminal restart launcher
+  requirements.txt     Python dependencies
+  render.yaml          Hosting configuration
+  Dockerfile           Container build
+```
 
-Asset search uses a persistent SQLite directory in data/quantlab.sqlite (or QUANTLAB_DB_PATH). US stocks and ETFs are downloaded from Nasdaq Trader symbol directories; active USD crypto pairs come from Coinbase Exchange. No API key is required for these downloads. On startup and hourly while running, the server checks for directories older than 24 hours and refreshes them in the background. Failed downloads leave the previous successful snapshot intact and retry after an hour. Search remains available using saved data and built-in entries; Yahoo search supplements unmatched queries. /api/assets/status reports counts, last successful refresh, and refresh warnings. Directories cover current listings, not a worldwide or historical delisted universe; some complex security symbols are excluded pending provider mapping. Refreshing requires the application to be running.
+The former `src/` package is now `trading/`. Imports use, for example,
+`from trading.backtester import Backtester`. The web app is
+`backend.server:application`.
 
+Run the moving-average example from the project root:
 
-The Live market monitor supports every backtest source with explicit freshness labels: Coinbase streams USD crypto prices, Yahoo polls recent minute bars every 60 seconds (quotes may be delayed), Alpha Vantage polls its default daily quote hourly using the API key entered in Strategy setup, CSV displays the latest chronological bar from the uploaded file, and demo mode generates simulated quotes every 5 seconds. Use asset symbols such as AAPL or BTC-USD. Connections start only when requested; changing the monitor source or symbol disconnects the old feed. These quotes never place orders or change backtest results.
+```powershell
+.\.venv\Scripts\python.exe examples\moving_average.py
+```
+
+Generated example charts are saved under `data/plots/`.
+
+## Tests
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
+Get-ChildItem tests\*.cjs | ForEach-Object {
+    node $_.FullName
+    if ($LASTEXITCODE -ne 0) { throw "Browser check failed: $($_.Name)" }
+}
+```
+
+Python tests use controlled data; Node.js regression checks run without a
+browser dependency. Windows launcher checks are skipped on other platforms.
+GitHub Actions runs both suites on pushes and pull requests.
+
+## Hosting
+
+See [the deployment guide](docs/DEPLOYMENT.md) for Render setup,
+authentication, persistent storage, and Docker deployment.
+
+Production uses `python -m scripts.serve`, the host's `PORT`, one worker,
+and no development reload. The Render configuration serves the frontend and
+backend together with a persistent SQLite disk and generated single-account
+login password. It requires paid hosting.
+
+The configuration does not publish the app automatically: connect a repository
+and hosting account first. Keep secrets and local databases outside Git.
+Completed data survives redeploys on the persistent disk; unfinished research
+jobs reset, and paper polling pauses during downtime.

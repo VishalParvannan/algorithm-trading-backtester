@@ -1,3 +1,4 @@
+"""Verify signal generation and parameter validation for trading strategies."""
 import numpy as np
 import pandas as pd
 import pytest

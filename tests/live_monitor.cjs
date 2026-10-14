@@ -1,3 +1,4 @@
+// Verify opt-in streaming, ticker filtering, reconnects, and disconnect behavior.
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');

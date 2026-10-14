@@ -1,3 +1,4 @@
+"""Verify cash-aware position sizing, holding behavior, and trade records."""
 import pandas as pd
 import pytest
 

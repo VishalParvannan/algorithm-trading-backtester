@@ -1,3 +1,4 @@
+# Build a private production container with an unprivileged application user.
 FROM python:3.12-slim
 WORKDIR /app
 COPY requirements.txt .

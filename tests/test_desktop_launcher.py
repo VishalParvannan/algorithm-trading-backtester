@@ -1,3 +1,4 @@
+"""Verify browser opening waits for a healthy server and handles startup failure."""
 import importlib.util
 import io
 from pathlib import Path
