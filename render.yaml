@@ -15,8 +15,8 @@ services:
         value: "1"
       - key: QUANTLAB_AUTH_MODE
         value: accounts
-      - key: QUANTLAB_PASSWORD
-        generateValue: true
+      - key: QUANTLAB_INVITATION_CODE
+        value: quantbacktestlab
       - key: QUANTLAB_DB_PATH
         value: /var/data/quantlab.sqlite
       - key: MPLCONFIGDIR

@@ -46,7 +46,13 @@ class Accounts:
             raise ValueError('Username must be 3–32 letters, numbers, dots, underscores, or dashes.')
         if not isinstance(password,str) or not 12<=len(password)<=128:
             raise ValueError('Choose a password between 12 and 128 characters.')
-        if os.getenv('QUANTLAB_PUBLIC')=='1' and (not os.environ.get('QUANTLAB_PASSWORD') or not hmac.compare_digest(str(invitation).encode(),os.environ.get('QUANTLAB_PASSWORD','').encode())):
+        if not re.search(r'[A-Za-z]',password):
+            raise ValueError('Password must include at least one letter.')
+        if not re.search(r'[^A-Za-z]',password):
+            raise ValueError('Password must include a number, space, or symbol.')
+        # Validate on the server so browser validation cannot bypass the invitation.
+        expected_code = os.getenv('QUANTLAB_INVITATION_CODE', 'quantbacktestlab')
+        if not expected_code or not hmac.compare_digest(str(invitation).encode(), expected_code.encode()):
             raise ValueError('A valid invitation code is required to create an account.')
         salt=secrets.token_hex(16);hashed=password_hash(password,salt)
         with self.store.connect() as db:

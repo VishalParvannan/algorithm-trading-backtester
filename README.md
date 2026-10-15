@@ -44,8 +44,12 @@ and run `python -m backend.backtest_service` from the project root.
 ### Personal accounts
 
 The app opens a sign-in page. Choose **Create an account**, enter a unique
-username and a password of at least 12 characters, then sign in. Usernames
-are case-insensitive. Local registration does not need an invitation code.
+username and a password of 12–128 characters, including a letter and a number,
+space, or symbol. Confirm the password in the second field. Eye buttons show
+or hide either entry; a live checklist identifies missing requirements and
+reports whether the entries match. These rules also apply on the server.
+Then sign in. Usernames
+are case-insensitive. New accounts require the case-sensitive invitation code quantbacktestlab.
 
 Each account has its own drafts, CSV uploads, saved runs, paper portfolios,
 and browser preferences. Passwords use salted scrypt hashes; expiring sessions
@@ -58,7 +62,7 @@ one-time, and unavailable on a public host. Existing data is never assigned to
 new accounts automatically. There is no email verification or password-recovery
 service yet; keep your account password safe.
 
-On a public host, registration requires the server's `QUANTLAB_PASSWORD`
+On a public host, registration requires the server's `QUANTLAB_INVITATION_CODE`
 invitation code in addition to choosing an individual password. Keep the code
 private. `QUANTLAB_AUTH_MODE=legacy` retains the old local/Basic-auth behavior
 for existing API integrations; normal use defaults to personal accounts.

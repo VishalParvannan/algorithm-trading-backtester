@@ -13,6 +13,7 @@ def clients(tmp_path,monkeypatch):
     monkeypatch.setenv('QUANTLAB_DB_PATH',str(tmp_path/'accounts.sqlite'))
     monkeypatch.delenv('QUANTLAB_AUTH_MODE',raising=False)
     monkeypatch.delenv('QUANTLAB_PUBLIC',raising=False)
+    monkeypatch.delenv('QUANTLAB_INVITATION_CODE',raising=False)
     monkeypatch.setattr(server.AssetDirectory,'refresh_due',lambda self:None)
     monkeypatch.setattr(server.PaperTrading,'tick_due',lambda self:None)
     with TestClient(server.application) as a,TestClient(server.application) as b:
@@ -20,7 +21,7 @@ def clients(tmp_path,monkeypatch):
 
 
 def register(client,name):
-    response=client.post('/api/auth/register',json={'username':name,'password':'A-good-test-password'})
+    response=client.post('/api/auth/register',json={'username':name,'password':'A-good-test-password','invitation':'quantbacktestlab'})
     assert response.status_code==200,response.text
     return response
 
@@ -40,7 +41,7 @@ def test_signup_login_logout_and_password_hashes(clients):
     assert a.post('/api/auth/logout',json={}).status_code==200
     assert a.get('/api/auth/me').status_code==401
     assert a.post('/api/auth/login',json={'username':'ALICE','password':'wrong'}).status_code==400
-    assert a.post('/api/auth/login',json={'username':'ALICE','password':'A-good-test-password'}).status_code==200
+    assert a.post('/api/auth/login',json={'username':'ALICE','password':'A-good-test-password','invitation':'quantbacktestlab'}).status_code==200
     assert b.get('/api/auth/me').status_code==401
 
 
@@ -82,13 +83,33 @@ def test_registration_validation_and_throttling(clients):
     assert 'Too many' in b.post('/api/auth/login',json={'username':'alice','password':'incorrect'}).text
 
 
+def test_registration_password_requirements_and_confirmation(clients):
+    a,b=clients
+    for password,message in [('123456789012','letter'),('onlylettershere','number'),('short1','12')]:
+        response=a.post('/api/auth/register',json={'username':'newuser','password':password})
+        assert response.status_code==400 and message in response.json()['error']
+    response=a.post('/api/auth/register',json={'username':'newuser','password':'long-password1','password_confirmation':'not-the-same'})
+    assert response.status_code==400 and 'do not match' in response.json()['error']
+    response=a.post('/api/auth/register',json={'username':'newuser','password':'long-password1','password_confirmation':'long-password1','invitation':'quantbacktestlab'})
+    assert response.status_code==200
+
+
 def test_hosted_signup_requires_invitation_and_uses_secure_cookie(clients,monkeypatch):
     a,b=clients
     monkeypatch.setenv('QUANTLAB_PUBLIC','1')
-    monkeypatch.setenv('QUANTLAB_PASSWORD','private-invitation-test-code')
+    monkeypatch.setenv('QUANTLAB_INVITATION_CODE','private-invitation-test-code')
     payload=dict(username='hosted',password='a-personal-password')
     assert a.post('/api/auth/register',json=payload).status_code==400
     response=a.post('https://testserver/api/auth/register',json={**payload,'invitation':'private-invitation-test-code'})
     assert response.status_code==200
     assert 'Secure' in response.headers['set-cookie']
     assert a.get('https://testserver/api/auth/me').json()['username']=='hosted'
+
+
+def test_default_invitation_is_required_and_case_sensitive(clients):
+    a,b=clients
+    payload=dict(username='invited',password='a-personal-password')
+    for code in ['', 'wrong-code', 'Quantbacktestlab', 'quantbacktestlab ']:
+        response=a.post('/api/auth/register',json={**payload,'invitation':code})
+        assert response.status_code==400 and 'invitation' in response.json()['error']
+    assert a.post('/api/auth/register',json={**payload,'invitation':'quantbacktestlab'}).status_code==200

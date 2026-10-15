@@ -52,7 +52,7 @@ def store():
 
 @asynccontextmanager
 async def lifespan(application):
-    if os.getenv("QUANTLAB_PUBLIC") == "1" and len(os.getenv("QUANTLAB_PASSWORD", "")) < 16:
+    if os.getenv("QUANTLAB_PUBLIC") == "1" and os.getenv("QUANTLAB_AUTH_MODE") == "legacy" and len(os.getenv("QUANTLAB_PASSWORD", "")) < 16:
         raise RuntimeError("Set a QUANTLAB_PASSWORD of at least 16 characters for a private hosted deployment.")
     if os.getenv('QUANTLAB_PUBLIC')=='1' and not os.getenv('QUANTLAB_DB_PATH'):
         raise RuntimeError('Set QUANTLAB_DB_PATH to a database on your persistent disk before deploying.')
@@ -175,6 +175,8 @@ def authenticate(action: str,payload: dict,request: Request):
     if action not in {'login','register'}:raise HTTPException(404)
     accounts.throttle('ip:'+str(request.client.host if request.client else 'unknown'),limit=30)
     if action=='register':
+        if 'password_confirmation' in payload and payload['password_confirmation']!=payload.get('password'):
+            raise ValueError('Passwords do not match.')
         user=accounts.register(payload.get('username'),payload.get('password'),payload.get('invitation',''))
     else:user=accounts.login(payload.get('username'),payload.get('password'))
     accounts.logout(request.cookies.get('backtest_session'))

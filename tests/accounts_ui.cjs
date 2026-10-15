@@ -1,6 +1,6 @@
 // Verify account entry and per-account request/storage binding without a browser.
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const nodes=new Map();function node(id){if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',hidden:false});return nodes.get(id);}
+const nodes=new Map();function node(id){if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',hidden:false,dataset:{label:id},attributes:{},setAttribute(key,value){this.attributes[key]=value;},setCustomValidity(value){this.validationMessage=value;}});return nodes.get(id);}
 const payloads=[],redirects=[];
 const context={document:{getElementById:node},location:{replace:url=>redirects.push(url)},fetch:async(url,options)=>{payloads.push([url,JSON.parse(options.body)]);return {ok:true,json:async()=>({id:'alice'})};}};
 vm.runInNewContext(fs.readFileSync('web/auth.js','utf8'),context);
@@ -8,9 +8,37 @@ vm.runInNewContext(fs.readFileSync('web/auth.js','utf8'),context);
   node('auth-username').value='alice';node('auth-password').value='a-valid-long-password';
   node('auth-toggle').onclick();assert.equal(node('auth-submit').textContent,'Create account');
   assert.equal(node('invitation-label').hidden,false);
+  assert.equal(node('confirmation-field').hidden,false);
+  node('auth-confirm').value='different';node('auth-confirm').oninput();
+  await node('auth-form').onsubmit({preventDefault(){}});assert.equal(payloads.length,0);
+  assert.match(node('password-match').textContent,/do not match/);
+  node('auth-confirm').value=node('auth-password').value;node('auth-confirm').oninput();
+  assert.equal(node('password-status').dataset.valid,'true');
+  node('password-eye').onclick();assert.equal(node('auth-password').type,'text');
+  node('password-eye').onclick();assert.equal(node('auth-password').type,'password');
+  node('confirm-eye').onclick();assert.equal(node('auth-confirm').type,'text');
+  node('auth-invitation').value='quantbacktestlab';
+  assert.equal(node('auth-invitation').required,true);
+  node('invitation-eye').onclick();assert.equal(node('auth-invitation').type,'text');
+  assert.equal(node('invitation-eye').attributes['aria-label'],'Hide hosting code');
+  node('invitation-eye').onclick();assert.equal(node('auth-invitation').type,'password');
   await node('auth-form').onsubmit({preventDefault(){}});
   assert.equal(payloads[0][0],'/api/auth/register');assert.equal(payloads[0][1].username,'alice');
+  assert.equal(payloads[0][1].password_confirmation,node('auth-password').value);
+  assert.equal(payloads[0][1].invitation,'quantbacktestlab');
   assert.equal(redirects[0],'/');
+  context.fetch=async()=>({ok:false,json:async()=>({error:'A valid invitation code is required to create an account.'})});
+  let codePopup=false;
+  node('auth-invitation').reportValidity=()=>{codePopup=true;};
+  await node('auth-form').onsubmit({preventDefault(){}});
+  assert.equal(codePopup,true);
+  assert.match(node('auth-invitation').validationMessage,/Invalid hosting code/);
+  assert.equal(node('auth-message').textContent,'');
+  assert.equal(node('auth-submit').disabled,false);
+  node('auth-invitation').oninput();
+  assert.equal(node('auth-invitation').validationMessage,'');
+  node('auth-toggle').onclick();assert.equal(node('confirmation-field').hidden,true);
+  assert.equal(node('auth-confirm').disabled,true);
   let status=200;const requests=[],routes=[];
   const session={Headers,URL,location:{href:'http://localhost/',origin:'http://localhost',replace:url=>routes.push(url)},document:{getElementById:()=>({textContent:'{"id":"alice"}'})},window:{fetch:async(input,options)=>{requests.push(options);return {status};}}};
   vm.runInNewContext(fs.readFileSync('web/account-session.js','utf8'),session);

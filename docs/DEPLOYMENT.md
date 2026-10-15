@@ -15,7 +15,7 @@ existing Python examples continue to work independently.
 ### Render setup
 
 The root `render.yaml` defines one paid, always-on Python service, a 1 GB
-persistent disk, a generated registration invitation code, and `/health` monitoring. The
+persistent disk, a configurable registration invitation code, and `/health` monitoring. The
 frontend and backend run together. Review https://render.com/pricing before
 creating the service.
 
@@ -23,9 +23,8 @@ creating the service.
    `.env`, `data`, SQLite files, and API keys; use the included `.gitignore`.
 2. Create a Render account. Select **New → Blueprint**, connect the repository,
    and use its `render.yaml`. Review the paid `starter` plan and disk first.
-3. After deployment, open **Environment** on the service. Retrieve the generated
-   `QUANTLAB_PASSWORD` invitation code there, or replace it with a code of at
-   least 16 characters. Never commit it. Share it only with intended users.
+3. The registration code defaults to quantbacktestlab (case-sensitive). To change it,
+   set QUANTLAB_INVITATION_CODE in the service Environment settings.
 4. Open the HTTPS URL and choose **Create an account**. Supply the invitation
    code and choose your own username/password. Each account has separate data.
    The hosted server works independently of your computer.
@@ -40,21 +39,20 @@ the host interrupts polling temporarily and clears unfinished research jobs;
 active paper sessions resume afterward, without backfilling missed quotes.
 
 Production starts with `python -m scripts.serve`, uses the hosting `PORT`,
-and disables development reload. Startup requires a strong public password
-and explicit database path. Browser writes from other origins are rejected.
+and disables development reload. Startup requires an explicit database path. Individual account passwords
+follow the sign-up password requirements. Browser writes from other origins are rejected.
 The configuration is ready locally; no public service has been created yet.
 
 Use the included Dockerfile on a Python/container host. Configure:
 
 - `QUANTLAB_PUBLIC=1`
 - `QUANTLAB_AUTH_MODE=accounts` (default)
-- `QUANTLAB_PASSWORD`: a private registration invitation code of at least 16 characters
+- `QUANTLAB_INVITATION_CODE`: registration code (defaults to `quantbacktestlab`)
 - `QUANTLAB_DB_PATH=/app/data/quantlab.sqlite`
 - Optionally `ALPHA_VANTAGE_API_KEY`
 
 Attach a persistent writable volume at `/app/data`. Terminate HTTPS at the
-hosting provider's proxy before exposing the app. Without an invitation code, public-mode startup refuses to
-run. Credentials protect the page, assets, drafts, runs and job endpoints;
+hosting provider's proxy before exposing the app. Registration checks the invitation code on the server. Credentials protect the page, assets, drafts, runs and job endpoints;
 the non-sensitive `/health` endpoint remains available to the host.
 
 Run one process/replica initially. The research queue is bounded to four
