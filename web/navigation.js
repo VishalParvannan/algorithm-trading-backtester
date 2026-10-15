@@ -59,13 +59,13 @@
     if(key==='research')window.updateResearchContext?.();
     byId('export').hidden=!['backtest','trades'].includes(key);
     document.title=`Backtest Lab · ${pages[key].title}`;
-    if(remember)try{localStorage.setItem('backtestLab.page',key);}catch{}
+    if(remember)try{localStorage.setItem(window.accountStorageKey?.('backtestLab.page')||'backtestLab.page',key);}catch{}
     // Charts need a new width after their previously hidden container opens.
     if(key==='backtest'&&typeof chart==='function')requestAnimationFrame(()=>chart());
   }
   function hashPage(){const key=location.hash.slice(1);return {overview:'backtest',configuration:'backtest'}[key]||key;}
   window.addEventListener('hashchange',()=>{show(hashPage());window.scrollTo({top:0,behavior:'auto'});});
   window.navigateWorkspace=key=>{if(location.hash===`#${key}`)show(key);else location.hash=key;};
-  let saved;try{saved=localStorage.getItem('backtestLab.page');}catch{}
+  let saved;try{saved=localStorage.getItem(window.accountStorageKey?.('backtestLab.page')||'backtestLab.page');}catch{}
   show(location.hash?hashPage():saved||'backtest',false);
 })();

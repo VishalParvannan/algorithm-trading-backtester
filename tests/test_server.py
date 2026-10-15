@@ -11,6 +11,7 @@ from backend import server
 
 @pytest.fixture
 def client(monkeypatch,tmp_path):
+    monkeypatch.setenv('QUANTLAB_AUTH_MODE','legacy')
     monkeypatch.setattr(server.AssetDirectory, 'refresh_due', lambda self: None)
     monkeypatch.setattr(server.PaperTrading, 'tick_due', lambda self: None)
     monkeypatch.setenv('QUANTLAB_DB_PATH',str(tmp_path/'database.sqlite'))

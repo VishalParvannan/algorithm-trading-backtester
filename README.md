@@ -41,6 +41,28 @@ and run `python -m backend.backtest_service` from the project root.
 
 ## Workspace pages
 
+### Personal accounts
+
+The app opens a sign-in page. Choose **Create an account**, enter a unique
+username and a password of at least 12 characters, then sign in. Usernames
+are case-insensitive. Local registration does not need an invitation code.
+
+Each account has its own drafts, CSV uploads, saved runs, paper portfolios,
+and browser preferences. Passwords use salted scrypt hashes; expiring sessions
+use HttpOnly cookies. **Sign out** is available in the top bar. Old tabs detect
+account changes and cannot save into another user's workspace.
+
+The first local account can click **Import previous local workspace** to claim
+the old shared SQLite drafts, experiments, and paper sessions. Import is explicit,
+one-time, and unavailable on a public host. Existing data is never assigned to
+new accounts automatically. There is no email verification or password-recovery
+service yet; keep your account password safe.
+
+On a public host, registration requires the server's `QUANTLAB_PASSWORD`
+invitation code in addition to choosing an individual password. Keep the code
+private. `QUANTLAB_AUTH_MODE=legacy` retains the old local/Basic-auth behavior
+for existing API integrations; normal use defaults to personal accounts.
+
 | Page | Purpose |
 | --- | --- |
 | Backtest | Configure sources, assets, strategies, dates, capital, and execution; view metrics and portfolio performance |
@@ -146,10 +168,19 @@ historical backtest results.
 asset, strategy, capital, allocation, costs, and share sizing. Yahoo, Coinbase,
 and demo are supported; Alpha Vantage daily quotes and CSVs are snapshots.
 
-Indicators count collected quote observations, not daily backtest candles.
-Warm-up begins empty, and the page shows the observation count and sampling
-interval. A signal fills on the next fresh quote, with fees and slippage.
-Duplicate timestamps do not generate orders.
+Choose 1-minute, 5-minute, or daily paper candles before starting a session.
+Indicators count completed candles; the unfinished candle cannot generate a
+signal. Candles use UTC boundaries and are reconstructed from sampled quotes,
+not official exchange OHLC. Daily UTC candles may differ from exchange-session
+daily backtest bars. Sampling can miss intraperiod highs and lows.
+
+Warm-up begins empty. The initial partial candle is skipped, and empty intervals
+are never filled with invented prices. A signal can fill on the first fresh
+quote after its candle closes, including fees and slippage. Duplicate quote
+timestamps do not create orders. Candle state survives server restarts.
+The page shows the completed-candle count and sampling interval. Existing
+quote-observation sessions pause on upgrade; start a new candle session to
+continue without changing the meaning of an old account's history.
 
 Sessions, positions, observations, and trades persist in SQLite. Active
 sessions continue when the browser closes and resume after server restart.
@@ -243,8 +274,8 @@ authentication, persistent storage, and Docker deployment.
 
 Production uses `python -m scripts.serve`, the host's `PORT`, one worker,
 and no development reload. The Render configuration serves the frontend and
-backend together with a persistent SQLite disk and generated single-account
-login password. It requires paid hosting.
+backend together with a persistent SQLite disk and generated registration
+invitation code. Users create individual accounts. It requires paid hosting.
 
 The configuration does not publish the app automatically: connect a repository
 and hosting account first. Keep secrets and local databases outside Git.

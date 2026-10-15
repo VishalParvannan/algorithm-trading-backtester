@@ -5,6 +5,11 @@ from fastapi.testclient import TestClient
 from backend import server
 
 
+@pytest.fixture(autouse=True)
+def legacy_auth(monkeypatch):
+    monkeypatch.setenv('QUANTLAB_AUTH_MODE','legacy')
+
+
 def test_production_port_and_single_process(monkeypatch):
     monkeypatch.setenv('PORT','10000')
     assert settings()==dict(host='0.0.0.0',port=10000,workers=1,reload=False)

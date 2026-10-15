@@ -3,6 +3,8 @@
   const node=id=>document.getElementById(id);
   const percent=value=>value==null?'—':`${(value*100).toFixed(2)}%`;
   const number=value=>value==null?'—':Number(value).toFixed(2);
+  try{const saved=localStorage.getItem(window.accountStorageKey?.('backtestLab.paperInterval')||'backtestLab.paperInterval');if(['1m','5m','1d'].includes(saved))node('paper-interval').value=saved;}catch{}
+  node('paper-interval').onchange=()=>{try{localStorage.setItem(window.accountStorageKey?.('backtestLab.paperInterval')||'backtestLab.paperInterval',node('paper-interval').value);}catch{}};
   const researchActions=node('research-actions');researchActions.hidden=false;
   function researchContext(){
     const form=node('config');
@@ -80,7 +82,7 @@
       const session=sessions.find(s=>s.id===node('paper-session').value)||sessions[0];
       node('paper-stop').disabled=!session?.active;
       if(!session){node('paper-note').textContent='No paper sessions yet. Configure an asset and strategy, then start.';table('paper-trades',[]);return;}
-      node('paper-note').textContent=`${session.method} Sampling approximately every ${session.sample_interval||60} seconds. ${session.observations.length} observations collected; warm-up needs approximately ${session.warmup_observations||1}. ${session.error||''}`;
+      node('paper-note').textContent=`${session.method} Sampling approximately every ${session.sample_interval||60} seconds. ${(session.candles||[]).length} completed candles; warm-up needs approximately ${session.warmup_observations||1} candles. ${session.error||''}`;
       node('paper-value').textContent=`Equity ${number(session.equity)} · Cash ${number(session.cash)} · Shares ${number(session.shares)} · ${session.currency||'Quote currency'} · ${session.active?'Running while server is open':'Stopped'}`;
       table('paper-trades',session.trades.slice(-50).reverse().map(t=>[t.timestamp,t.quantity>0?'Buy':'Sell',number(Math.abs(t.quantity)),number(t.price),number(t.commission)]));
       table('paper-actions-body',(session.corporate_actions||[]).slice(-50).reverse().map(event=>[event.effective,event.kind,number(event.value),number(event.shares_before),number(event.shares_after),number(event.cash_credit),event.model]));
@@ -90,6 +92,7 @@
     node('paper-start').disabled=true;
     try{
       const config=Object.fromEntries(new FormData(node('config')));
+      config.paper_interval=node('paper-interval').value||'1m';
       const response=await fetch('/api/paper',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(config)});
       const session=await response.json();if(!response.ok)throw Error(session.error||'Could not start paper trading.');
       node('paper-session').value='';await refreshPaper();node('paper-session').value=session.id;await refreshPaper();

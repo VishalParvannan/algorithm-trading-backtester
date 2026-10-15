@@ -1,7 +1,7 @@
 // Manage backtest configuration, saved drafts, research jobs, and result charts.
 const $ = selector => document.querySelector(selector);
 let result = null, view = 'equity', page = 0, definitions = JSON.parse($('#dashboard-catalog').textContent), csvText = '', csvGeneration = 0;
-const storageKey = 'quantlab.workspace.v1';
+const storageKey = window.accountStorageKey?.('quantlab.workspace.v1') || 'quantlab.workspace.v1';
 const savedFields = ['sensitivity_parameter','robustness_mode','walk_folds','source','ticker','strategy','start','end','periods_per_year','market_calendar','capital','commission','slippage','outputsize','allocation','execution_price','share_mode','compare_mode','holdout_mode','train_percent'];
 let draft = {fields: {}, parameters: {}}, activeStrategy = null, csvName = '';
 let draftTimer = null, edited = false;

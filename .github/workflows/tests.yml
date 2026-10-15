@@ -20,3 +20,4 @@ jobs:
       - run: node tests/quote_monitor.cjs
       - run: node tests/research_ui.cjs
       - run: node tests/navigation.cjs
+      - run: node tests/accounts_ui.cjs

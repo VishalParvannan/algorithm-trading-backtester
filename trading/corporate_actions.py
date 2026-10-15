@@ -49,6 +49,11 @@ def apply_actions(state,events,quote_time):
             # Keep indicator history continuous; trade records retain actual fill prices.
             for observation in state['observations']:
                 if utc(observation['timestamp'])<effective:observation['price']/=value
+            bars=list(state.get('candles',[]))
+            if state.get('current_candle'):bars.append(state['current_candle'])
+            for bar in bars:
+                if utc(bar['start'])<effective:
+                    for column in ('Open','High','Low','Close'):bar[column]/=value
         else:
             credit=shares*value;state['cash']+=credit
         record={**event,'shares_before':shares,'shares_after':state['shares'],'cash_credit':credit,

@@ -15,7 +15,7 @@ existing Python examples continue to work independently.
 ### Render setup
 
 The root `render.yaml` defines one paid, always-on Python service, a 1 GB
-persistent disk, a generated login password, and `/health` monitoring. The
+persistent disk, a generated registration invitation code, and `/health` monitoring. The
 frontend and backend run together. Review https://render.com/pricing before
 creating the service.
 
@@ -23,15 +23,17 @@ creating the service.
    `.env`, `data`, SQLite files, and API keys; use the included `.gitignore`.
 2. Create a Render account. Select **New → Blueprint**, connect the repository,
    and use its `render.yaml`. Review the paid `starter` plan and disk first.
-3. After deployment, open **Environment** on the service. The username is
-   `researcher`; retrieve the generated `QUANTLAB_PASSWORD` there, or replace
-   it with a unique password of at least 16 characters. Never commit it.
-4. Open the service's HTTPS URL and enter those credentials in the browser
-   login prompt. The hosted server works independently of your computer.
+3. After deployment, open **Environment** on the service. Retrieve the generated
+   `QUANTLAB_PASSWORD` invitation code there, or replace it with a code of at
+   least 16 characters. Never commit it. Share it only with intended users.
+4. Open the HTTPS URL and choose **Create an account**. Supply the invitation
+   code and choose your own username/password. Each account has separate data.
+   The hosted server works independently of your computer.
 5. Optionally set `ALPHA_VANTAGE_API_KEY` in the service's environment.
 
-This is a private single-account app with browser HTTP Basic authentication,
-not a multi-user signup system. Local data is not automatically uploaded.
+Personal accounts use hashed passwords and expiring HttpOnly cookies; public
+cookies are Secure and require HTTPS. Registration is invitation-gated. There
+is no email verification/recovery service. Local data is not automatically uploaded.
 Hosted experiments, drafts, asset directories, and paper accounts survive
 redeploys on `/var/data/quantlab.sqlite`. Keep one instance/worker. Restarting
 the host interrupts polling temporarily and clears unfinished research jobs;
@@ -45,14 +47,13 @@ The configuration is ready locally; no public service has been created yet.
 Use the included Dockerfile on a Python/container host. Configure:
 
 - `QUANTLAB_PUBLIC=1`
-- `QUANTLAB_USERNAME` (default `researcher`)
-- `QUANTLAB_PASSWORD`: a unique password of at least 16 characters
+- `QUANTLAB_AUTH_MODE=accounts` (default)
+- `QUANTLAB_PASSWORD`: a private registration invitation code of at least 16 characters
 - `QUANTLAB_DB_PATH=/app/data/quantlab.sqlite`
 - Optionally `ALPHA_VANTAGE_API_KEY`
 
 Attach a persistent writable volume at `/app/data`. Terminate HTTPS at the
-hosting provider's proxy before exposing the app: HTTP Basic authentication
-must travel over HTTPS. Without a password, public-mode startup refuses to
+hosting provider's proxy before exposing the app. Without an invitation code, public-mode startup refuses to
 run. Credentials protect the page, assets, drafts, runs and job endpoints;
 the non-sensitive `/health` endpoint remains available to the host.
 
@@ -62,8 +63,10 @@ restart; completed experiments and dataset snapshots survive in SQLite.
 Cancellation interrupts simulations between bars; an in-flight provider
 download can finish before cancellation takes effect.
 
-This is a private, single-account deployment. Separate multi-user signup,
-roles and broker-account access are future work. Server secrets belong in
+The old single-account behavior remains available with `QUANTLAB_AUTH_MODE=legacy`
+and `QUANTLAB_USERNAME`/`QUANTLAB_PASSWORD` for Basic authentication; it is not
+the normal browser-account mode. User roles and broker access are not implemented.
+Server secrets belong in
 the host's environment settings, never in the repository. `.env.example`
 documents the variables; the app does not automatically load `.env` files.
 

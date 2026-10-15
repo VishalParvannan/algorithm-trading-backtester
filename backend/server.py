@@ -3,6 +3,7 @@ import hmac
 import os
 import asyncio
 import logging
+import json
 from urllib.parse import urlsplit
 from contextlib import asynccontextmanager
 from io import StringIO
@@ -12,7 +13,7 @@ from uuid import uuid4
 
 import pandas as pd
 from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 from backend.backtest_service import ROOT, run_backtest
@@ -23,13 +24,18 @@ from trading.quotes import get_quote
 from trading.saved_comparison import compare_saved
 from trading.paper import PaperTrading
 from trading.storage import ExperimentStore
+from trading.accounts import Accounts
 
 security = HTTPBasic(auto_error=False)
 pool = ThreadPoolExecutor(max_workers=2)
 jobs, job_lock = {}, Lock()
 
 
-def owner(credentials: HTTPBasicCredentials | None = Depends(security)):
+def owner(request: Request,credentials: HTTPBasicCredentials | None = Depends(security)):
+    if os.getenv('QUANTLAB_AUTH_MODE')!='legacy':
+        user=Accounts().current(request.cookies.get('backtest_session'))
+        if not user:raise HTTPException(401,'Sign in to continue.')
+        return user['id']
     username, password = os.getenv("QUANTLAB_USERNAME", "researcher"), os.getenv("QUANTLAB_PASSWORD", "")
     if not password:
         if os.getenv("QUANTLAB_PUBLIC") == "1":
@@ -88,6 +94,11 @@ application = FastAPI(title="Backtest Lab", lifespan=lifespan, docs_url=None, re
 
 @application.middleware("http")
 async def request_limits(request: Request, call_next):
+    expected=request.headers.get('x-backtest-account')
+    if expected and request.url.path.startswith('/api/'):
+        user=Accounts().current(request.cookies.get('backtest_session'))
+        if not user:return JSONResponse({'error':'Sign in again.'},status_code=401)
+        if user['id']!=expected:return JSONResponse({'error':'The signed-in account changed. Reload this page.'},status_code=409)
     if request.method == "POST":
         origin=request.headers.get('origin')
         if origin and urlsplit(origin).netloc.lower()!=request.headers.get('host','').lower():
@@ -124,9 +135,65 @@ def health():
     return {"status": "ok", "engine_version": "3"}
 
 
+@application.get('/login')
+def login_page():
+    return FileResponse(ROOT/'login.html')
+
+
+@application.get('/auth.js')
+def auth_script():
+    return FileResponse(ROOT/'auth.js')
+
+
+@application.get('/account-session.js')
+def account_session_script():
+    return FileResponse(ROOT/'account-session.js')
+
+
+@application.get('/style.css')
+def public_styles():
+    return FileResponse(ROOT/'style.css')
+
+
+@application.get('/api/auth/me')
+def current_account(request: Request):
+    user=Accounts().current(request.cookies.get('backtest_session'))
+    if not user:raise HTTPException(401,'Sign in to continue.')
+    return user
+
+
+@application.post('/api/auth/{action}')
+def authenticate(action: str,payload: dict,request: Request):
+    accounts=Accounts()
+    if action=='logout':
+        accounts.logout(request.cookies.get('backtest_session'))
+        response=JSONResponse({'ok':True});response.delete_cookie('backtest_session');return response
+    if action=='import-local':
+        user=accounts.current(request.cookies.get('backtest_session'))
+        if not user:raise HTTPException(401,'Sign in to continue.')
+        accounts.import_local(user['id']);return {'ok':True}
+    if action not in {'login','register'}:raise HTTPException(404)
+    accounts.throttle('ip:'+str(request.client.host if request.client else 'unknown'),limit=30)
+    if action=='register':
+        user=accounts.register(payload.get('username'),payload.get('password'),payload.get('invitation',''))
+    else:user=accounts.login(payload.get('username'),payload.get('password'))
+    accounts.logout(request.cookies.get('backtest_session'))
+    response=JSONResponse(user)
+    response.set_cookie('backtest_session',accounts.session(user),max_age=604800,httponly=True,secure=os.getenv('QUANTLAB_PUBLIC')=='1',samesite='lax',path='/')
+    return response
+
+
 @application.get("/")
-def index(user=Depends(owner)):
-    return FileResponse(ROOT / "index.html")
+def index(request: Request,credentials: HTTPBasicCredentials | None = Depends(security)):
+    if os.getenv('QUANTLAB_AUTH_MODE')!='legacy':
+        user=Accounts().current(request.cookies.get('backtest_session'))
+        if not user:return RedirectResponse('/login',status_code=303)
+        context=json.dumps(user).replace('<','\\u003c')
+        html=(ROOT/'index.html').read_text(encoding='utf-8').replace('</head>',f'<script id="account-context" type="application/json">{context}</script><script src="/account-session.js"></script><script src="/auth.js" defer></script></head>')
+        return HTMLResponse(html)
+    # Keep the old Basic-auth mode available for existing automated clients.
+    owner(request,credentials)
+    return FileResponse(ROOT/'index.html')
 
 
 @application.get("/{asset}")

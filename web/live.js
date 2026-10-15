@@ -3,7 +3,7 @@ let liveSocket=null, liveStopped=true, liveRetry=0, liveRetryTimer=null, liveWat
 let quoteTimer=null,quoteGeneration=0;
 const liveNode=id=>document.getElementById(id);
 const liveMoney=value=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(value);
-try {liveNode('live-pair').value=localStorage.getItem('quantlab.livePair')||'BTC-USD';}catch{}
+try {liveNode('live-pair').value=localStorage.getItem(window.accountStorageKey?.('quantlab.livePair')||'quantlab.livePair')||'BTC-USD';}catch{}
 function stopFeed(){
   quoteGeneration++;clearTimeout(quoteTimer);
   liveStopped=true;clearTimeout(liveRetryTimer);clearInterval(liveWatchdog);
@@ -22,7 +22,7 @@ function connectFeed(reconnecting=false){
   if(!/^[A-Z0-9]+-USD$/.test(pair)){liveNode('live-status').textContent='Use a USD pair, e.g. BTC-USD';return;}
   if(!reconnecting){stopFeed();liveRetry=0;livePrices=[];liveNode('live-chart').replaceChildren();liveNode('live-price').textContent='—';liveNode('live-change').textContent='—';liveNode('live-spread').textContent='—';}
   liveStopped=false;liveNode('live-disconnect').disabled=false;
-  try{localStorage.setItem('quantlab.livePair',pair);}catch{}
+  try{localStorage.setItem(window.accountStorageKey?.('quantlab.livePair')||'quantlab.livePair',pair);}catch{}
   liveNode('live-status').textContent=reconnecting?'Reconnecting…':'Connecting…';
   let socket;
   try{socket=new WebSocket('wss://ws-feed.exchange.coinbase.com');}catch{stopFeed();liveNode('live-status').textContent='WebSocket unavailable';return;}
@@ -64,7 +64,7 @@ function monitorSourceChanged(){
   liveNode('live-price').textContent='—';liveNode('live-change').textContent='—';liveNode('live-spread').textContent='—';
   livePrices=[];liveNode('live-chart').replaceChildren();
   liveNode('live-updated').textContent='Choose an asset and connect to see prices.';
-  try{localStorage.setItem('quantlab.liveSource',source);}catch{}
+  try{localStorage.setItem(window.accountStorageKey?.('quantlab.liveSource')||'quantlab.liveSource',source);}catch{}
 }
 async function connectQuote(){
   stopFeed();liveStopped=false;const generation=quoteGeneration;
@@ -73,7 +73,7 @@ async function connectQuote(){
   const csv=typeof csvText==='string'?csvText:'';
   liveNode('live-disconnect').disabled=false;livePrices=[];liveNode('live-chart').replaceChildren();
   liveNode('live-price').textContent='—';liveNode('live-change').textContent='—';liveNode('live-spread').textContent='—';
-  try{localStorage.setItem('quantlab.livePair',symbol);}catch{}
+  try{localStorage.setItem(window.accountStorageKey?.('quantlab.livePair')||'quantlab.livePair',symbol);}catch{}
   async function poll(){
     if(liveStopped||generation!==quoteGeneration)return;
     liveNode('live-status').textContent='Fetching quote…';
@@ -99,5 +99,5 @@ async function connectQuote(){
   await poll();
 }
 liveNode('live-source').onchange=monitorSourceChanged;
-try{const saved=localStorage.getItem('quantlab.liveSource');if(saved&&sourceDescriptions[saved]){liveNode('live-source').value=saved;const pair=liveNode('live-pair').value;monitorSourceChanged();liveNode('live-pair').value=pair;}}catch{}
+try{const saved=localStorage.getItem(window.accountStorageKey?.('quantlab.liveSource')||'quantlab.liveSource');if(saved&&sourceDescriptions[saved]){liveNode('live-source').value=saved;const pair=liveNode('live-pair').value;monitorSourceChanged();liveNode('live-pair').value=pair;}}catch{}
 liveNode('live-pair').onchange=()=>{stopFeed();};
